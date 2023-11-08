@@ -1,0 +1,19 @@
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(517,5): warning MSB8004: Output 디렉터리가 슬래시로 끝나지 않습니다. Output 디렉터리의 적절한 평가를 허용하는 데 필요하므로 이 빌드 인스턴스에서 슬래시를 추가합니다.
+  inf_int.cpp
+C:\Users\Juyoung\Desktop\proj2\prob2\prob2\inf_int.cpp(13,31): warning C4267: '=': 'size_t'에서 'unsigned int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Juyoung\Desktop\proj2\prob2\prob2\inf_int.cpp(21,31): warning C4267: '=': 'size_t'에서 'unsigned int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Juyoung\Desktop\proj2\prob2\prob2\inf_int.cpp(90,27): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\Juyoung\Desktop\proj2\prob2\prob2\inf_int.cpp(92,26): warning C4018: '>': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\Juyoung\Desktop\proj2\prob2\prob2\inf_int.cpp(93,26): warning C4018: '>': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\Juyoung\Desktop\proj2\prob2\prob2\inf_int.cpp(100,37): warning C4267: '=': 'size_t'에서 'unsigned int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Juyoung\Desktop\proj2\prob2\prob2\inf_int.cpp(136,27): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\Juyoung\Desktop\proj2\prob2\prob2\inf_int.cpp(138,19): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\Juyoung\Desktop\proj2\prob2\prob2\inf_int.cpp(151,37): warning C4267: '=': 'size_t'에서 'unsigned int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\Juyoung\Desktop\proj2\prob2\prob2\inf_int.cpp(182,27): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\Juyoung\Desktop\proj2\prob2\prob2\inf_int.cpp(187,37): warning C4267: '=': 'size_t'에서 'unsigned int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+  main.cpp
+  코드를 생성하고 있습니다.
+  Previous IPDB not found, fall back to full compilation.
+  All 189 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  코드를 생성했습니다.
+  prob2.vcxproj -> C:\Users\Juyoung\Desktop\proj2\prob2\prob2\Release\prob2.exe
