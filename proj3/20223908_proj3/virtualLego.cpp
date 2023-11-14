@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cassert>
+#include <cmath>
 
 IDirect3DDevice9* Device = NULL;
 
@@ -27,7 +28,7 @@ const int Height = 768;
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
 const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {-2.7f,-0.9f}}; 
 // initialize the color of each ball (ball0 ~ ball3)
-const D3DXCOLOR sphereColor[4] = {d3d::RED, d3d::RED, d3d::YELLOW, d3d::WHITE};
+const D3DXCOLOR sphereColor[4] = {d3d::RED, d3d::RED, d3d::RED, d3d::WHITE};	
 
 // -----------------------------------------------------------------------------
 // Transform matrices
@@ -65,6 +66,9 @@ public:
     ~CSphere(void) {}
 
 public:
+	bool exist() {
+		return (m_pSphereMesh == NULL ? false : true);
+	}
     bool create(IDirect3DDevice9* pDevice, D3DXCOLOR color = d3d::WHITE)
     {
         if (NULL == pDevice)
@@ -80,7 +84,7 @@ public:
             return false;
         return true;
     }
-	
+
     void destroy(void)
     {
         if (m_pSphereMesh != NULL) {
@@ -91,7 +95,7 @@ public:
 
     void draw(IDirect3DDevice9* pDevice, const D3DXMATRIX& mWorld)
     {
-        if (NULL == pDevice)
+        if (NULL == pDevice||NULL==m_pSphereMesh)
             return;
         pDevice->SetTransform(D3DTS_WORLD, &mWorld);
         pDevice->MultiplyTransform(D3DTS_WORLD, &m_mLocal);
@@ -102,13 +106,37 @@ public:
     bool hasIntersected(CSphere& ball) 
 	{
 		// Insert your code here.
+		D3DXVECTOR3 diff = this->getCenter() - ball.getCenter();
+		float distance = D3DXVec3Length(&diff);
+		float sumRadii = this->getRadius() + ball.getRadius();
 
-		return false;
+		return distance < sumRadii;
 	}
 	
 	void hitBy(CSphere& ball) 
 	{ 
 		// Insert your code here.
+		if (!hasIntersected(ball)) return;
+		D3DXVECTOR3 v_diff;
+		D3DXVECTOR2 v_speed;
+		int flag = 0;
+		if (this->m_velocity_x == 0) {
+			v_diff = ball.getCenter() - this->getCenter();
+			v_speed = D3DXVECTOR2(ball.getVelocity_X(), ball.getVelocity_Z());
+			this->destroy();
+			flag = 0;
+		}
+		else {
+			v_diff = this->getCenter() - ball.getCenter();
+			v_speed = D3DXVECTOR2(this->getVelocity_X(), this->getVelocity_Z());
+			ball.destroy();
+			flag = 1;
+		}
+		float distance = D3DXVec3Length(&v_diff);
+		float speed = D3DXVec2Length(&v_speed);
+		float scale = speed / distance;
+		if (flag == 1) this->setPower(scale * v_diff.x, scale * v_diff.z);
+		else ball.setPower(scale * v_diff.x, scale * v_diff.z);
 	}
 
 	void ballUpdate(float timeDiff) 
@@ -125,23 +153,27 @@ public:
 
 			//correction of position of ball
 			// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
-			/*if(tX >= (4.5 - M_RADIUS))
-				tX = 4.5 - M_RADIUS;
+			int flag = 0;
+			if (tX >= (4.5 - M_RADIUS))
+				tX = 4.5 - M_RADIUS,flag=1;
 			else if(tX <=(-4.5 + M_RADIUS))
-				tX = -4.5 + M_RADIUS;
+				tX = -4.5 + M_RADIUS, flag = 2;
 			else if(tZ <= (-3 + M_RADIUS))
-				tZ = -3 + M_RADIUS;
+				tZ = -3 + M_RADIUS, flag = 3;
 			else if(tZ >= (3 - M_RADIUS))
-				tZ = 3 - M_RADIUS;*/
+				tZ = 3 - M_RADIUS, flag = 4;
 			
+			if (flag == 1 || flag == 2)this->setPower(-m_velocity_x, m_velocity_z);
+			if (flag == 3 || flag == 4) this->setPower(m_velocity_x, -m_velocity_z);
+
 			this->setCenter(tX, cord.y, tZ);
 		}
 		else { this->setPower(0,0);}
 		//this->setPower(this->getVelocity_X() * DECREASE_RATE, this->getVelocity_Z() * DECREASE_RATE);
-		double rate = 1 -  (1 - DECREASE_RATE)*timeDiff * 400;
-		if(rate < 0 )
-			rate = 0;
-		this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);
+		//double rate = 1 -  (1 - DECREASE_RATE)*timeDiff * 400;
+		//if(rate < 0 )
+		//	rate = 0;
+		//this->setPower(getVelocity_X() * rate, getVelocity_Z() * rate);
 	}
 
 	double getVelocity_X() { return this->m_velocity_x;	}
@@ -429,7 +461,7 @@ bool Setup()
         return false;
 	
 	// Position and aim the camera.
-	D3DXVECTOR3 pos(0.0f, 5.0f, -8.0f);
+	D3DXVECTOR3 pos(0.0f, 7.0f, -5.0f);
 	D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);
 	D3DXVECTOR3 up(0.0f, 2.0f, 0.0f);
 	D3DXMatrixLookAtLH(&g_mView, &pos, &target, &up);
@@ -482,7 +514,7 @@ bool Display(float timeDelta)
 		// check whether any two balls hit together and update the direction of balls
 		for(i = 0 ;i < 4; i++){
 			for(j = 0 ; j < 4; j++) {
-				if(i >= j) {continue;}
+				if(i >= j||g_sphere[i].exist()==false) { continue; }
 				g_sphere[i].hitBy(g_sphere[j]);
 			}
 		}
@@ -609,7 +641,6 @@ int WINAPI WinMain(HINSTANCE hinstance,
 				   int showCmd)
 {
     srand(static_cast<unsigned int>(time(NULL)));
-	
 	if(!d3d::InitD3D(hinstance,
 		Width, Height, true, D3DDEVTYPE_HAL, &Device))
 	{
