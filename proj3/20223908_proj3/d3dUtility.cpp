@@ -149,7 +149,7 @@ int d3d::EnterMsgLoop( bool (*ptr_display)(float timeDelta) )
 	MSG msg;
 	::ZeroMemory(&msg, sizeof(MSG));
 
-	static double lastTime = (double)timeGetTime(); 
+	static double lastTime = (double)timeGetTime();
 
 	while(msg.message != WM_QUIT)
 	{

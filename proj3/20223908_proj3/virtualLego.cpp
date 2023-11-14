@@ -26,10 +26,11 @@ const int Height = 768;
 
 // There are four balls
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
-const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {-2.7f,-0.9f}}; 
+const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {0.f,-2.6f}};//(x,y) 
 // initialize the color of each ball (ball0 ~ ball3)
-const D3DXCOLOR sphereColor[4] = {d3d::RED, d3d::RED, d3d::RED, d3d::WHITE};	
-
+const D3DXCOLOR sphereColor[4] = {d3d::RED, d3d::RED, d3d::RED, d3d::WHITE};
+bool game_start = false;
+float blueballPos_x = 0;
 // -----------------------------------------------------------------------------
 // Transform matrices
 // -----------------------------------------------------------------------------
@@ -113,23 +114,23 @@ public:
 		return distance < sumRadii;
 	}
 	
-	void hitBy(CSphere& ball) 
+	void hitBy(CSphere& ball,bool is_white_ball=false) 
 	{ 
 		// Insert your code here.
 		if (!hasIntersected(ball)) return;
 		D3DXVECTOR3 v_diff;
 		D3DXVECTOR2 v_speed;
 		int flag = 0;
-		if (this->m_velocity_x == 0) {
+		if (this->m_velocity_x == 0&&this->m_velocity_z==0) {
 			v_diff = ball.getCenter() - this->getCenter();
 			v_speed = D3DXVECTOR2(ball.getVelocity_X(), ball.getVelocity_Z());
-			this->destroy();
+			if(is_white_ball==false)this->destroy();
 			flag = 0;
 		}
 		else {
 			v_diff = this->getCenter() - ball.getCenter();
 			v_speed = D3DXVECTOR2(this->getVelocity_X(), this->getVelocity_Z());
-			ball.destroy();
+			if (is_white_ball == false)ball.destroy();
 			flag = 1;
 		}
 		float distance = D3DXVec3Length(&v_diff);
@@ -154,12 +155,18 @@ public:
 			//correction of position of ball
 			// Please uncomment this part because this correction of ball position is necessary when a ball collides with a wall
 			int flag = 0;
-			if (tX >= (4.5 - M_RADIUS))
-				tX = 4.5 - M_RADIUS,flag=1;
-			else if(tX <=(-4.5 + M_RADIUS))
-				tX = -4.5 + M_RADIUS, flag = 2;
-			else if(tZ <= (-3 + M_RADIUS))
-				tZ = -3 + M_RADIUS, flag = 3;
+			if (tX >= (3.5 - M_RADIUS))
+				tX = 3.5 - M_RADIUS, flag = 1;
+			else if (tX <= (-3.5 + M_RADIUS))
+				tX = -3.5 + M_RADIUS, flag = 2;
+			else if (tZ <= (-3 + M_RADIUS)) {
+				//tZ = -3 + M_RADIUS, flag = 3;
+				D3DXVECTOR3 w_coord3d = this->getCenter();
+				this->setCenter(blueballPos_x, (float)M_RADIUS, spherePos[3][1]);
+				this->setPower(0, 0);
+				game_start = false;
+				return;
+			}
 			else if(tZ >= (3 - M_RADIUS))
 				tZ = 3 - M_RADIUS, flag = 4;
 			
@@ -396,7 +403,7 @@ private:
 // -----------------------------------------------------------------------------
 CWall	g_legoPlane;
 CWall	g_legowall[4];
-CSphere	g_sphere[4];
+CSphere	g_sphere[4];//g_sphere[3] is white ball
 CSphere	g_target_blueball;
 CLight	g_light;
 
@@ -421,18 +428,18 @@ bool Setup()
     D3DXMatrixIdentity(&g_mProj);
 		
 	// create plane and set the position
-    if (false == g_legoPlane.create(Device, -1, -1, 9, 0.03f, 6, d3d::GREEN)) return false;
+    if (false == g_legoPlane.create(Device, -1, -1, 7, 0.03f, 6, d3d::GREEN)) return false;
     g_legoPlane.setPosition(0.0f, -0.0006f / 5, 0.0f);
 	
 	// create walls and set the position. note that there are four walls
-	if (false == g_legowall[0].create(Device, -1, -1, 9, 0.3f, 0.12f, d3d::DARKRED)) return false;
+	if (false == g_legowall[0].create(Device, -1, -1, 7, 0.3f, 0.12f, d3d::DARKRED)) return false;
 	g_legowall[0].setPosition(0.0f, 0.12f, 3.06f);
-	if (false == g_legowall[1].create(Device, -1, -1, 9, 0.3f, 0.12f, d3d::DARKRED)) return false;
+	if (false == g_legowall[1].create(Device, -1, -1, 7, 0.3f, 0.12f, d3d::DARKRED)) return false;
 	g_legowall[1].setPosition(0.0f, 0.12f, -3.06f);
 	if (false == g_legowall[2].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
-	g_legowall[2].setPosition(4.56f, 0.12f, 0.0f);
+	g_legowall[2].setPosition(3.56f, 0.12f, 0.0f);
 	if (false == g_legowall[3].create(Device, -1, -1, 0.12f, 0.3f, 6.24f, d3d::DARKRED)) return false;
-	g_legowall[3].setPosition(-4.56f, 0.12f, 0.0f);
+	g_legowall[3].setPosition(-3.56f, 0.12f, 0.0f);
 
 	// create four balls and set the position
 	for (i=0;i<4;i++) {
@@ -443,7 +450,8 @@ bool Setup()
 	
 	// create blue ball for set direction
     if (false == g_target_blueball.create(Device, d3d::BLUE)) return false;
-	g_target_blueball.setCenter(.0f, (float)M_RADIUS , .0f);
+	g_target_blueball.setCenter(.0f, (float)M_RADIUS , -3.0f);
+	blueballPos_x = 0;
 	
 	// light setting 
     D3DLIGHT9 lit;
@@ -514,9 +522,11 @@ bool Display(float timeDelta)
 		// check whether any two balls hit together and update the direction of balls
 		for(i = 0 ;i < 4; i++){
 			for(j = 0 ; j < 4; j++) {
-				if(i >= j||g_sphere[i].exist()==false) { continue; }
+				if(i >= j||g_sphere[i].exist()==false|| g_sphere[j].exist() == false) { continue; }
 				g_sphere[i].hitBy(g_sphere[j]);
 			}
+			if (g_sphere[i].exist() == true)
+				g_sphere[i].hitBy(g_target_blueball,true);
 		}
 
 		// draw plane, walls, and spheres
@@ -563,7 +573,8 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 }
                 break;
             case VK_SPACE:
-				
+				if (game_start == true) break;
+				game_start = true;
 				D3DXVECTOR3 targetpos = g_target_blueball.getCenter();
 				D3DXVECTOR3	whitepos = g_sphere[3].getCenter();
 				double theta = acos(sqrt(pow(targetpos.x - whitepos.x, 2)) / sqrt(pow(targetpos.x - whitepos.x, 2) +
@@ -572,7 +583,7 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				if (targetpos.z - whitepos.z >= 0 && targetpos.x - whitepos.x <= 0) { theta = PI - theta; } //2 사분면
 				if (targetpos.z - whitepos.z <= 0 && targetpos.x - whitepos.x <= 0){ theta = PI + theta; } // 3 사분면
 				double distance = sqrt(pow(targetpos.x - whitepos.x, 2) + pow(targetpos.z - whitepos.z, 2));
-				g_sphere[3].setPower(distance * cos(theta), distance * sin(theta));
+				g_sphere[3].setPower(0,2);//distance * cos(theta), distance * sin(theta));
 
 				break;
 
@@ -620,8 +631,14 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					dx = (old_x - new_x);// * 0.01f;
 					dy = (old_y - new_y);// * 0.01f;
 		
-					D3DXVECTOR3 coord3d=g_target_blueball.getCenter();
-					g_target_blueball.setCenter(coord3d.x+dx*(-0.007f),coord3d.y,coord3d.z+dy*0.007f );
+					D3DXVECTOR3 b_coord3d=g_target_blueball.getCenter();
+					float nx=b_coord3d.x+dx*(-0.007f);
+					if(nx>=3.5f-M_RADIUS) nx=3.5f-M_RADIUS;
+					else if(nx<=-3.5f+M_RADIUS) nx=-3.5f+M_RADIUS;
+					g_target_blueball.setCenter(nx,b_coord3d.y,b_coord3d.z );
+					blueballPos_x = b_coord3d.x + dx * (-0.007f);
+					if(game_start==false) 
+						g_sphere[3].setCenter(b_coord3d.x+dx*(-0.007f), (float)M_RADIUS,spherePos[3][1]);
 				}
 				old_x = new_x;
 				old_y = new_y;
