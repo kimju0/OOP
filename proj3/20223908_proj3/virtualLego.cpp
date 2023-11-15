@@ -25,6 +25,7 @@ const int Height = 768;
 
 // There are four balls
 const int num_balls = 30;
+int remain_balls = num_balls-1;
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
 const float spherePos[num_balls][2] = {
 	{0.f,0.f} , {0.f,0.5f} , {0.f,1.f} , {0.f,-2.6f},
@@ -112,6 +113,7 @@ public:
         if (m_pSphereMesh != NULL) {
             m_pSphereMesh->Release();
             m_pSphereMesh = NULL;
+			remain_balls--;
         }
     }
 
@@ -513,7 +515,7 @@ bool Setup()
 void Cleanup(void)
 {
     g_legoPlane.destroy();
-	for(int i = 0 ; i < num_balls; i++) {
+	for(int i = 0 ; i < 4; i++) {
 		g_legowall[i].destroy();
 	}
     destroyAllLegoBlock();
@@ -577,6 +579,10 @@ LRESULT CALLBACK d3d::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     static int old_y = 0;
     static enum { WORLD_MOVE, LIGHT_MOVE, BLOCK_MOVE } move = WORLD_MOVE;
 	
+	if (remain_balls == 0) {
+		::DestroyWindow(hwnd);
+		::PostQuitMessage(0);
+	}
 	switch( msg ) {
 	case WM_DESTROY:
         {
