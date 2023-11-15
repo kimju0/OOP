@@ -16,7 +16,6 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cassert>
-#include <cmath>
 
 IDirect3DDevice9* Device = NULL;
 
@@ -25,10 +24,32 @@ const int Width  = 1024;
 const int Height = 768;
 
 // There are four balls
+const int num_balls = 30;
 // initialize the position (coordinate) of each ball (ball0 ~ ball3)
-const float spherePos[4][2] = { {-2.7f,0} , {+2.4f,0} , {3.3f,0} , {0.f,-2.6f}};//(x,y) 
+const float spherePos[num_balls][2] = {
+	{0.f,0.f} , {0.f,0.5f} , {0.f,1.f} , {0.f,-2.6f},
+	{0.f,-0.5f}, {0.f,-1.f}, {0.43f,0.f}, {0.86f,0.f},
+	{-0.43f,0.f}, {-0.86f,0.f},//여기까지 '+',단 sphere[3]제외
+	
+	{0.f + 2.39f,0.f} , {0.f + 2.39f,0.5f} , {0.f + 2.39f,1.f} ,
+	{0.f + 2.39f,-0.5f}, {0.f + 2.39f,-1.f}, {0.43f + 2.39f,0.f}, {0.86f + 2.39f,0.f},
+	{-0.43f + 2.39f,0.f}, {-0.86f + 2.39f,0.f},//여기의 최좌단, 가운데 '+'의 최우단 차이에 의한 좌표 보정
+	
+	{0.f - 2.39f ,1.f} , {0.f - 2.39f,-1.f}, {-0.86f - 2.39f,0.f},
+	{-0.43f-2.39f,1.f},{-0.86f - 2.39f,0.5f},{-0.86f - 2.39f,-0.5f},{-0.43f - 2.39f,-1.f},
+	{0.43f - 2.39f,-1.f},{0.86f - 2.39f,-0.7f},{0.86f - 2.39f,0.7f}, {0.43f - 2.39f ,1.f}
+};//(x,y) 
 // initialize the color of each ball (ball0 ~ ball3)
-const D3DXCOLOR sphereColor[4] = {d3d::RED, d3d::RED, d3d::RED, d3d::WHITE};
+const D3DXCOLOR sphereColor[num_balls] = {
+	d3d::RED, d3d::RED, d3d::RED, d3d::WHITE,
+	d3d::RED, d3d::RED, d3d::RED, d3d::RED, 
+	d3d::RED, d3d::RED, d3d::RED, d3d::RED, 
+	d3d::RED, d3d::RED, d3d::RED, d3d::RED,
+	d3d::RED, d3d::RED, d3d::RED, d3d::RED,
+	d3d::RED, d3d::RED, d3d::RED, d3d::RED,
+	d3d::RED, d3d::RED, d3d::RED, d3d::RED, 
+	d3d::RED, d3d::RED
+};
 bool game_start = false;
 float blueballPos_x = 0;
 // -----------------------------------------------------------------------------
@@ -403,7 +424,7 @@ private:
 // -----------------------------------------------------------------------------
 CWall	g_legoPlane;
 CWall	g_legowall[4];
-CSphere	g_sphere[4];//g_sphere[3] is white ball
+CSphere	g_sphere[num_balls];//g_sphere[3] is white ball
 CSphere	g_target_blueball;
 CLight	g_light;
 
@@ -442,7 +463,7 @@ bool Setup()
 	g_legowall[3].setPosition(-3.56f, 0.12f, 0.0f);
 
 	// create four balls and set the position
-	for (i=0;i<4;i++) {
+	for (i=0;i<num_balls;i++) {
 		if (false == g_sphere[i].create(Device, sphereColor[i])) return false;
 		g_sphere[i].setCenter(spherePos[i][0], (float)M_RADIUS , spherePos[i][1]);
 		g_sphere[i].setPower(0,0);
@@ -492,7 +513,7 @@ bool Setup()
 void Cleanup(void)
 {
     g_legoPlane.destroy();
-	for(int i = 0 ; i < 4; i++) {
+	for(int i = 0 ; i < num_balls; i++) {
 		g_legowall[i].destroy();
 	}
     destroyAllLegoBlock();
@@ -514,14 +535,14 @@ bool Display(float timeDelta)
 		Device->BeginScene();
 		
 		// update the position of each ball. during update, check whether each ball hit by walls.
-		for( i = 0; i < 4; i++) {
+		for( i = 0; i < num_balls; i++) {
 			g_sphere[i].ballUpdate(timeDelta);
-			for(j = 0; j < 4; j++){ g_legowall[i].hitBy(g_sphere[j]); }
+			//for(j = 0; j < 4; j++){ g_legowall[i].hitBy(g_sphere[j]); }
 		}
 
 		// check whether any two balls hit together and update the direction of balls
-		for(i = 0 ;i < 4; i++){
-			for(j = 0 ; j < 4; j++) {
+		for(i = 0 ;i < num_balls; i++){
+			for(j = 0 ; j < num_balls; j++) {
 				if(i >= j||g_sphere[i].exist()==false|| g_sphere[j].exist() == false) { continue; }
 				g_sphere[i].hitBy(g_sphere[j]);
 			}
@@ -533,6 +554,9 @@ bool Display(float timeDelta)
 		g_legoPlane.draw(Device, g_mWorld);
 		for (i=0;i<4;i++) 	{
 			g_legowall[i].draw(Device, g_mWorld);
+			//g_sphere[i].draw(Device, g_mWorld);
+		}
+		for (i = 0; i < num_balls; i++) {
 			g_sphere[i].draw(Device, g_mWorld);
 		}
 		g_target_blueball.draw(Device, g_mWorld);
